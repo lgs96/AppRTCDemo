@@ -20,6 +20,7 @@
 
     <string-array name="cameraFps">
         <item>Default</item>
+        <item>60 fps</item>
         <item>30 fps</item>
         <item>15 fps</item>
     </string-array>

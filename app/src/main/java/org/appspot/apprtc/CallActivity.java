@@ -130,6 +130,9 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   // Peer connection statistics callback period in ms.
   private static final int STAT_CALLBACK_PERIOD = 1000;
 
+  // Goodsol
+  private Intent record_intent;
+
   private static class ProxyVideoSink implements VideoSink {
     private VideoSink target;
 
@@ -373,11 +376,14 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
         getApplicationContext(), eglBase, peerConnectionParameters, CallActivity.this);
     PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
     if (loopback) {
+      options.disableEncryption = false;
       options.networkIgnoreMask = 0;
     }
     peerConnectionClient.createPeerConnectionFactory(options);
 
     if (screencaptureEnabled) {
+      record_intent = new Intent(this, MediaProjectionAccessService.class);
+      startService(record_intent);
       startScreenCapture();
     } else {
       startCall();

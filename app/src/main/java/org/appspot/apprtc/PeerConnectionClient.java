@@ -11,6 +11,7 @@
 package org.appspot.apprtc;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.Nullable;
@@ -588,9 +589,13 @@ public class PeerConnectionClient {
 
     queuedRemoteCandidates = new ArrayList<>();
 
+    // Goodsol: The error occurs here from the unusable ICE candidate. I exclude unusable ICE candidate from app server, but should be fixed later.
     PeerConnection.RTCConfiguration rtcConfig =
         new PeerConnection.RTCConfiguration(signalingParameters.iceServers);
     // TCP candidates are only useful when connecting to a server that supports
+
+    //Log.d(TAG, "goodsol signaling: "+ signalingParameters.iceServers.get(0) + signalingParameters.iceServers.get(1) + signalingParameters.iceServers.get(2));
+
     // ICE-TCP.
     rtcConfig.tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.DISABLED;
     rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE;
@@ -612,6 +617,7 @@ public class PeerConnectionClient {
       init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters.maxRetransmitTimeMs;
       init.id = peerConnectionParameters.dataChannelParameters.id;
       init.protocol = peerConnectionParameters.dataChannelParameters.protocol;
+
       dataChannel = peerConnection.createDataChannel("ApprtcDemo data", init);
     }
     isInitiator = false;

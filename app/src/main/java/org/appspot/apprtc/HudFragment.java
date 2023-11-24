@@ -12,6 +12,8 @@ package org.appspot.apprtc;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,13 +23,123 @@ import android.widget.TextView;
 
 import org.webrtc.StatsReport;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import com.opencsv.CSVWriter;
+
 
 /**
  * Fragment for HUD statistics display.
  */
 public class HudFragment extends Fragment {
+
+  // Step 1: Create a list of keys to extract from the map
+  List<String> computeToExtractSent = new ArrayList<String>() {{
+    add("googAvgEncodeMs");
+    add("googFrameHeightInput");
+    add("googFrameWidthInput");
+    add("googFrameHeightSent");
+    add("googFrameWidthSent");
+    add("googRtt");
+  }};
+
+  List<String> computeToExtractRecv = new ArrayList<String>() {{
+    add("googRenderDelayMs");
+    add("googDecodeMs");
+    add("googFrameHeightReceived");
+    add("googFrameWidthReceived");
+  }};
+
+  List<String> networkToExtractSent = new ArrayList<String>() {{
+    add("googFrameRateSent");
+    add("googTargetEncBitrate");
+    add("googActualEncBitrate");
+    add("googTransmitBitrate");
+    add("googAvailableSendBandwidth");
+    add("googRetransmitBitrate");
+    add("packetsLost");
+  }};
+
+  List<String> networkToExtractRecv = new ArrayList<String>() {{
+    add("googFrameRateReceived");
+    add("bytesReceived");
+  }};
+
+  List<String> combinedSentList;
+  List<String> combinedRecvList;
+
+
+  String[] valuesSent;
+  String[] valuesRecv;
+
+  File csvfileSent = null;
+  File csvfileRecv = null;
+  CSVWriter writerSent = null;
+  CSVWriter writerRecv = null;
+  String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+  String fileNameSent = "webRtc_Sent_" + timeStamp + ".csv";
+  String fileNameRecv = "webRtc_Recv_" + timeStamp + ".csv";
+
+  long startTime = System.nanoTime();
+
+  String[] csv_dataSent;
+  String[] csv_dataRecv;
+
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          // Handling Sent
+          csvfileSent = new File(getActivity().getFilesDir(), fileNameSent);
+          writerSent = new CSVWriter(new FileWriter(csvfileSent, true));
+          combinedSentList = new ArrayList<String>();
+          combinedSentList.add("Time");
+          combinedSentList.addAll(computeToExtractSent);
+          combinedSentList.addAll(networkToExtractSent);
+          csv_dataSent = combinedSentList.toArray(new String[0]);
+          writerSent.writeNext(csv_dataSent);
+          writerSent.close(); // close file
+
+          // Handling Recv
+          csvfileRecv = new File(getActivity().getFilesDir(), fileNameRecv);
+          writerRecv = new CSVWriter(new FileWriter(csvfileRecv, true));
+          combinedRecvList = new ArrayList<String>();
+          combinedRecvList.add("Time");
+          combinedRecvList.addAll(computeToExtractRecv);
+          combinedRecvList.addAll(networkToExtractRecv);
+          csv_dataRecv = combinedRecvList.toArray(new String[0]);
+          writerRecv.writeNext(csv_dataRecv);
+          writerRecv.close(); // close file
+
+
+          valuesSent = new String[combinedSentList.size()];
+          Arrays.fill(valuesSent, "N/A");
+
+          valuesRecv = new String[combinedRecvList.size()];
+          Arrays.fill(valuesRecv, "N/A");
+
+          String filePathSent = csvfileSent.getAbsolutePath();
+          Log.i("CSV File Path", filePathSent);
+
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    }).start();
+  }
+
   private TextView encoderStatView;
   private TextView hudViewBwe;
   private TextView hudViewConnection;
@@ -124,7 +236,94 @@ public class HudFragment extends Fragment {
     String targetBitrate = null;
     String actualBitrate = null;
 
+
+    new Thread(new Runnable() {
+      public void run() {
+
+        for (StatsReport report : reports) {
+          Map<String, String> reportMap = getReportMap(report);
+          double elapsedSeconds = (System.nanoTime() - startTime) / 1e9;
+
+          if ((report.type.equals("ssrc") && report.id.contains("ssrc"))) {
+            if (report.id.contains("send")) {
+              String trackId = reportMap.get("googTrackId");
+              if (trackId != null && trackId.contains(PeerConnectionClient.VIDEO_TRACK_ID)) {
+                valuesSent[0] = String.format("%.3f", elapsedSeconds);
+                for (int i = 1; i < combinedSentList.size(); i++) {
+                  if (reportMap.containsKey(combinedSentList.get(i))) {
+                    Log.i("Goodsol CSV", report.id + " " + combinedSentList.get(i));
+                    valuesSent[i] = reportMap.get(combinedSentList.get(i));
+                  }
+                }
+                try {
+                  writerSent = new CSVWriter(new FileWriter(csvfileSent, true)); // open file
+                  writerSent.writeNext(valuesSent);
+                  writerSent.flush();
+                  writerSent.close(); // close file
+
+                  Log.i("CSV values Sent", Arrays.toString(valuesSent));
+                } catch (IOException e) {
+                  e.printStackTrace();
+                  Log.e("CSV_WRITE_ERROR", "Error writing to CSV file", e);
+                }
+              }
+            } else if (report.id.contains("recv")) {
+              String frameWidth = reportMap.get("googFrameWidthReceived");
+              if (frameWidth != null) {
+                valuesRecv[0] = String.format("%.3f", elapsedSeconds);
+                for (int i = 1; i < combinedRecvList.size(); i++) {
+                  if (reportMap.containsKey(combinedRecvList.get(i))) {
+                    valuesRecv[i] = reportMap.get(combinedRecvList.get(i));
+                  }
+                  //Log.i("CSV File Recv", valuesRecv[i]);
+                }
+                try {
+                  writerRecv = new CSVWriter(new FileWriter(csvfileRecv, true)); // open file
+                  writerRecv.writeNext(valuesRecv);
+                  writerRecv.flush();
+                  writerRecv.close(); // close file
+
+                  Log.i("CSV values Recv", Arrays.toString(valuesRecv));
+                } catch (IOException e) {
+                  e.printStackTrace();
+                  Log.e("CSV_WRITE_ERROR", "Error writing to CSV file", e);
+                }
+              }
+            }
+          }
+          else if (report.id.equals("bweforvideo")) {
+            valuesSent[0] = String.format("%.3f", elapsedSeconds);
+            for (int i = 1; i < combinedSentList.size(); i++) {
+              if (reportMap.containsKey(combinedSentList.get(i))) {
+                valuesSent[i] = reportMap.get(combinedSentList.get(i));
+              }
+            }
+            try {
+              writerSent = new CSVWriter(new FileWriter(csvfileSent, true)); // open file
+              writerSent.writeNext(valuesSent);
+              writerSent.flush();
+              writerSent.close(); // close file
+
+              Log.i("CSV values Sent", Arrays.toString(valuesSent));
+            } catch (IOException e) {
+              e.printStackTrace();
+              Log.e("CSV_WRITE_ERROR", "Error writing to CSV file", e);
+            }
+          }
+        }
+      }
+    }).start();
+
     for (StatsReport report : reports) {
+      // Print report to figure out the available performance logs
+      Map<String, String> myMap = getReportMap(report);
+      Log.i("Goodsol", "Update map stats");
+      for (Map.Entry<String, String> entry : myMap.entrySet()) {
+        String key = entry.getKey();
+        String value = entry.getValue();
+        Log.i("Goodsol", report.id + " " + key +" " + value);
+      }
+
       if (report.type.equals("ssrc") && report.id.contains("ssrc") && report.id.contains("send")) {
         // Send video statistics.
         Map<String, String> reportMap = getReportMap(report);
@@ -137,8 +336,8 @@ public class HudFragment extends Fragment {
             videoSendStat.append(name).append("=").append(value.value).append("\n");
           }
         }
-      } else if (report.type.equals("ssrc") && report.id.contains("ssrc")
-          && report.id.contains("recv")) {
+
+      } else if (report.type.equals("ssrc") && report.id.contains("ssrc") && report.id.contains("recv")) {
         // Receive video statistics.
         Map<String, String> reportMap = getReportMap(report);
         // Check if this stat is for video track.
@@ -150,6 +349,8 @@ public class HudFragment extends Fragment {
             videoRecvStat.append(name).append("=").append(value.value).append("\n");
           }
         }
+
+
       } else if (report.id.equals("bweforvideo")) {
         // BWE statistics.
         Map<String, String> reportMap = getReportMap(report);

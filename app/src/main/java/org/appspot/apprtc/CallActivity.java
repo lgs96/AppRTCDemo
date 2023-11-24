@@ -128,7 +128,7 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
       "android.permission.RECORD_AUDIO", "android.permission.INTERNET"};
 
   // Peer connection statistics callback period in ms.
-  private static final int STAT_CALLBACK_PERIOD = 1000;
+  private static final int STAT_CALLBACK_PERIOD = 100;
 
   // Goodsol
   private Intent record_intent;

@@ -474,6 +474,7 @@ public class ConnectActivity extends Activity {
         }
       }
     }
+    Log.d(TAG, "Current camera setting: " + cameraFps);
 
     // Check capture quality slider flag.
     boolean captureQualitySlider = sharedPrefGetBoolean(R.string.pref_capturequalityslider_key,

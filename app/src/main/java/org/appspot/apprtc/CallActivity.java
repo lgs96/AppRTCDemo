@@ -75,6 +75,8 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   public static final String EXTRA_LOOPBACK = "org.appspot.apprtc.LOOPBACK";
   public static final String EXTRA_VIDEO_CALL = "org.appspot.apprtc.VIDEO_CALL";
   public static final String EXTRA_SCREENCAPTURE = "org.appspot.apprtc.SCREENCAPTURE";
+
+  public static final String EXTRA_FILEVIDEO = "org.appspot.apprtc.PREDEFINED_VIDEO";
   public static final String EXTRA_CAMERA2 = "org.appspot.apprtc.CAMERA2";
   public static final String EXTRA_VIDEO_WIDTH = "org.appspot.apprtc.VIDEO_WIDTH";
   public static final String EXTRA_VIDEO_HEIGHT = "org.appspot.apprtc.VIDEO_HEIGHT";
@@ -178,6 +180,8 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   private long callStartedTimeMs;
   private boolean micEnabled = true;
   private boolean screencaptureEnabled;
+
+  private boolean predefinedVideoEnabled;
   private static Intent mediaProjectionPermissionResultData;
   private static int mediaProjectionPermissionResultCode;
   // True if local view is in the fullscreen renderer.
@@ -299,6 +303,7 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     int videoHeight = intent.getIntExtra(EXTRA_VIDEO_HEIGHT, 0);
 
     screencaptureEnabled = intent.getBooleanExtra(EXTRA_SCREENCAPTURE, false);
+    predefinedVideoEnabled = intent.getBooleanExtra(EXTRA_FILEVIDEO, false);
     // If capturing format is not specified for screencapture, use screen resolution.
     if (screencaptureEnabled && videoWidth == 0 && videoHeight == 0) {
       DisplayMetrics displayMetrics = getDisplayMetrics();
@@ -706,27 +711,39 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
 
   private @Nullable VideoCapturer createVideoCapturer() {
     final VideoCapturer videoCapturer;
-    String videoFileAsCamera = getIntent().getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA);
-    if (videoFileAsCamera != null) {
+
+    String videoFileAsCamera = "/sdcard/CCVideo/1080_test.y4m";
+    if (predefinedVideoEnabled && videoFileAsCamera != null) {
       try {
         videoCapturer = new FileVideoCapturer(videoFileAsCamera);
       } catch (IOException e) {
-        reportError("Failed to open video file for emulated camera");
+        reportError("Failed to open predefined video file for emulated camera");
         return null;
       }
-    } else if (screencaptureEnabled) {
-      return createScreenCapturer();
-    } else if (useCamera2()) {
-      if (!captureToTexture()) {
-        reportError(getString(R.string.camera2_texture_only_error));
-        return null;
-      }
+    }
+    else {
+      videoFileAsCamera = getIntent().getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA);
+      if (videoFileAsCamera != null) {
+        try {
+          videoCapturer = new FileVideoCapturer(videoFileAsCamera);
+        } catch (IOException e) {
+          reportError("Failed to open video file for emulated camera");
+          return null;
+        }
+      } else if (screencaptureEnabled) {
+        return createScreenCapturer();
+      } else if (useCamera2()) {
+        if (!captureToTexture()) {
+          reportError(getString(R.string.camera2_texture_only_error));
+          return null;
+        }
 
-      Logging.d(TAG, "Creating capturer using camera2 API.");
-      videoCapturer = createCameraCapturer(new Camera2Enumerator(this));
-    } else {
-      Logging.d(TAG, "Creating capturer using camera1 API.");
-      videoCapturer = createCameraCapturer(new Camera1Enumerator(captureToTexture()));
+        Logging.d(TAG, "Creating capturer using camera2 API.");
+        videoCapturer = createCameraCapturer(new Camera2Enumerator(this));
+      } else {
+        Logging.d(TAG, "Creating capturer using camera1 API.");
+        videoCapturer = createCameraCapturer(new Camera1Enumerator(captureToTexture()));
+      }
     }
     if (videoCapturer == null) {
       reportError("Failed to open camera");
@@ -753,9 +770,9 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     signalingParameters = params;
     logAndToast("Creating peer connection, delay=" + delta + "ms");
     VideoCapturer videoCapturer = null;
-    if (peerConnectionParameters.videoCallEnabled) {
+    //if (peerConnectionParameters.videoCallEnabled) {
       videoCapturer = createVideoCapturer();
-    }
+    //}
     peerConnectionClient.createPeerConnection(
         localProxyVideoSink, remoteSinks, videoCapturer, signalingParameters);
 

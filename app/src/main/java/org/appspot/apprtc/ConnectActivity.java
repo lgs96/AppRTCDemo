@@ -374,6 +374,10 @@ public class ConnectActivity extends Activity {
     boolean useScreencapture = sharedPrefGetBoolean(R.string.pref_screencapture_key,
         CallActivity.EXTRA_SCREENCAPTURE, R.string.pref_screencapture_default, useValuesFromIntent);
 
+    // Use screencapture option.
+    boolean usePredefinedvideo = sharedPrefGetBoolean(R.string.pref_predefinedvideo_key,
+            CallActivity.EXTRA_FILEVIDEO, R.string.pref_screencapture_default, useValuesFromIntent);
+
     // Use Camera2 option.
     boolean useCamera2 = sharedPrefGetBoolean(R.string.pref_camera2_key, CallActivity.EXTRA_CAMERA2,
         R.string.pref_camera2_default, useValuesFromIntent);
@@ -551,6 +555,7 @@ public class ConnectActivity extends Activity {
       intent.putExtra(CallActivity.EXTRA_LOOPBACK, loopback);
       intent.putExtra(CallActivity.EXTRA_VIDEO_CALL, videoCallEnabled);
       intent.putExtra(CallActivity.EXTRA_SCREENCAPTURE, useScreencapture);
+      intent.putExtra(CallActivity.EXTRA_FILEVIDEO, usePredefinedvideo);
       intent.putExtra(CallActivity.EXTRA_CAMERA2, useCamera2);
       intent.putExtra(CallActivity.EXTRA_VIDEO_WIDTH, videoWidth);
       intent.putExtra(CallActivity.EXTRA_VIDEO_HEIGHT, videoHeight);

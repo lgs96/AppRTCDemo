@@ -26,6 +26,7 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
   private SettingsFragment settingsFragment;
   private String keyprefVideoCall;
   private String keyprefScreencapture;
+  private String keyprefPredefinedVideo;
   private String keyprefCamera2;
   private String keyprefResolution;
   private String keyprefFps;
@@ -68,6 +69,7 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
     super.onCreate(savedInstanceState);
     keyprefVideoCall = getString(R.string.pref_videocall_key);
     keyprefScreencapture = getString(R.string.pref_screencapture_key);
+    keyprefPredefinedVideo = getString(R.string.pref_predefinedvideo_key);
     keyprefCamera2 = getString(R.string.pref_camera2_key);
     keyprefResolution = getString(R.string.pref_resolution_key);
     keyprefFps = getString(R.string.pref_fps_key);
@@ -123,6 +125,7 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
     sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     updateSummaryB(sharedPreferences, keyprefVideoCall);
     updateSummaryB(sharedPreferences, keyprefScreencapture);
+    updateSummaryB(sharedPreferences, keyprefPredefinedVideo);
     updateSummaryB(sharedPreferences, keyprefCamera2);
     updateSummary(sharedPreferences, keyprefResolution);
     updateSummary(sharedPreferences, keyprefFps);
@@ -221,6 +224,7 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
       updateSummaryBitrate(sharedPreferences, key);
     } else if (key.equals(keyprefVideoCall)
         || key.equals(keyprefScreencapture)
+        || key.equals(keyprefPredefinedVideo)
         || key.equals(keyprefCamera2)
         || key.equals(keyPrefTracing)
         || key.equals(keyprefCaptureQualitySlider)

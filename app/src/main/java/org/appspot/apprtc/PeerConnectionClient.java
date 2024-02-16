@@ -14,7 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 import java.io.File;
 import java.io.IOException;
@@ -604,7 +604,7 @@ public class PeerConnectionClient {
     // Use ECDSA encryption.
     rtcConfig.keyType = PeerConnection.KeyType.ECDSA;
     // Enable DTLS for normal calls and disable for loopback calls.
-    rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
+    //rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback;
     rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
     peerConnection = factory.createPeerConnection(rtcConfig, pcObserver);

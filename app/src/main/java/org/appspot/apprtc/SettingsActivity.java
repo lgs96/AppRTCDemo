@@ -16,8 +16,13 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.util.Log;
+
 import org.webrtc.Camera2Enumerator;
 import org.webrtc.audio.JavaAudioDeviceModule;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Settings activity for AppRTC.
@@ -64,6 +69,8 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
   private String keyprefNegotiated;
   private String keyprefDataId;
 
+  private SharedMemoryManager shared;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -107,6 +114,20 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
     keyPrefDisplayHud = getString(R.string.pref_displayhud_key);
     keyPrefTracing = getString(R.string.pref_tracing_key);
     keyprefEnabledRtcEventLog = getString(R.string.pref_enable_rtceventlog_key);
+
+    Log.i("Hi", "SettingsActivity");
+    shared = new SharedMemoryManager(this);
+    shared.setupSharedMemory();
+
+    Map<String, Object> data = new HashMap<>();
+    data.put("is_endure", true);
+
+    // Assuming you want to write to the same file used in setupSharedMemory
+    shared.writeToJsonFile(shared.getFilePath(), data);
+
+    // Read the content back
+    String jsonContent = shared.readFromJsonFile();
+    Log.i("HiHiHi", "Read from file: " + jsonContent);
 
     // Display the fragment as the main content.
     settingsFragment = new SettingsFragment();
@@ -194,6 +215,9 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
       disableBuiltInNSPreference.setSummary(getString(R.string.pref_built_in_ns_not_available));
       disableBuiltInNSPreference.setEnabled(false);
     }
+
+
+    Log.i("HiHi", "SettingsActivity");
   }
 
   @Override

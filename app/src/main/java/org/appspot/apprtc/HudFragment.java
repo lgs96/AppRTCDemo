@@ -13,6 +13,8 @@ package org.appspot.apprtc;
 import android.app.Fragment;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
+
+import android.os.Environment;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -102,7 +104,14 @@ public class HudFragment extends Fragment {
       public void run() {
         try {
           // Handling Sent
-          csvfileSent = new File(getActivity().getFilesDir(), fileNameSent);
+          File webrtcDir = new File(Environment.getExternalStorageDirectory(), "webrtc");
+
+        // Check if the webrtc directory exists, if not create it
+          if (!webrtcDir.exists()) {
+            webrtcDir.mkdirs();
+          }
+
+          csvfileSent = new File(webrtcDir, fileNameSent);
           writerSent = new CSVWriter(new FileWriter(csvfileSent, true));
           combinedSentList = new ArrayList<String>();
           combinedSentList.add("Time");

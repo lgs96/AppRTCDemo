@@ -36,6 +36,7 @@
             android:name=".MediaProjectionAccessService"
             android:enabled="true"
             android:exported="true"
+
             android:foregroundServiceType="mediaProjection"></service>
 
         <activity

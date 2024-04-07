@@ -249,4 +249,53 @@
             android:defaultValue="@string/pref_enable_rtceventlog_default"/>
     </PreferenceCategory>
 
+    <PreferenceCategory
+        android:key="@string/pref_endure_key"
+        android:title="@string/pref_endure_title">
+
+        <CheckBoxPreference
+            android:key="@string/pref_is_endure_key"
+            android:title="@string/pref_is_endure_title"
+            android:defaultValue="@string/pref_is_endure_default"
+            android:dialogTitle="@string/pref_is_endure_dlg"/>
+
+        <EditTextPreference
+            android:key="@string/pref_endure_mode_key"
+            android:title="@string/pref_endure_mode_title"
+            android:inputType="text"
+            android:defaultValue="@string/pref_endure_mode_default"
+            android:dialogTitle="@string/pref_endure_mode_dlg" />
+
+
+        <EditTextPreference
+            android:key="@string/pref_endure_deadline_key"
+            android:title="@string/pref_endure_deadline_title"
+            android:inputType="text"
+            android:defaultValue="@string/pref_endure_deadline_default"
+            android:dialogTitle="@string/pref_endure_deadline_dlg" />
+
+        <CheckBoxPreference
+            android:key="@string/pref_is_fixed_bitrate_key"
+            android:title="@string/pref_is_fixed_bitrate_title"
+            android:defaultValue="@string/pref_is_fixed_bitrate_default"
+            android:dialogTitle="@string/pref_is_fixed_bitrate_dlg"/>
+
+
+        <EditTextPreference
+            android:key="@string/pref_endure_fixed_bitrate_key"
+            android:title="@string/pref_endure_fixed_bitrate_title"
+            android:inputType="text"
+            android:defaultValue="@string/pref_endure_fixed_bitrate_default"
+            android:dialogTitle="@string/pref_endure_fixed_bitrate_dlg"/>
+
+        <EditTextPreference
+            android:key="@string/pref_endure_playout_delay_key"
+            android:title="@string/pref_endure_playout_delay_title"
+            android:inputType="text"
+            android:defaultValue="@string/pref_endure_playout_delay_default"
+            android:dialogTitle="@string/pref_endure_playout_delay_dlg"/>
+
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

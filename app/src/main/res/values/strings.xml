@@ -225,4 +225,38 @@
     <string name="pref_enable_rtceventlog_key">enable_rtceventlog_key</string>
     <string name="pref_enable_rtceventlog_title">Enable RtcEventLog.</string>
     <string name="pref_enable_rtceventlog_default">false</string>
+
+    <string name="pref_endure_key">endure_settings_key</string>
+    <string name="pref_endure_title">ENDURE settings.</string>
+
+    <string name="pref_is_endure_key">is_endure_preference</string>
+    <string name="pref_is_endure_title">Is ENDURE?</string>
+    <string name="pref_is_endure_dlg">0: Default, 1: ENDURE.</string>
+    <string name="pref_is_endure_default" translatable="false">false</string>
+
+    <string name="pref_endure_mode_key">endure_mode_preference</string>
+    <string name="pref_endure_mode_title">ENDURE mode</string>
+    <string name="pref_endure_mode_dlg">0: Predetermined, 1: Single, 2: MPC</string>
+    <string name="pref_endure_mode_default" translatable="false">0</string>
+
+    <string name="pref_endure_deadline_key">endure_deadline_preference</string>
+    <string name="pref_endure_deadline_title">ENDURE deadline (ms)</string>
+    <string name="pref_endure_deadline_dlg">e.g., 100 ms</string>
+    <string name="pref_endure_deadline_default" translatable="false">0</string>
+
+    <string name="pref_is_fixed_bitrate_key">is_fixed_bitrate_preference</string>
+    <string name="pref_is_fixed_bitrate_title">Is fixed bitrate?</string>
+    <string name="pref_is_fixed_bitrate_dlg">0: Default, 1: Fixed bitrate.</string>
+    <string name="pref_is_fixed_bitrate_default" translatable="false">false</string>
+
+    <string name="pref_endure_fixed_bitrate_key">endure_fixed_bitrate_preference</string>
+    <string name="pref_endure_fixed_bitrate_title">ENDURE fixed bitrate (Mbps)</string>
+    <string name="pref_endure_fixed_bitrate_dlg">e.g., 10 Mbps</string>
+    <string name="pref_endure_fixed_bitrate_default" translatable="false">0</string>
+
+    <string name="pref_endure_playout_delay_key">endure_playout_delay_preference</string>
+    <string name="pref_endure_playout_delay_title">ENDURE playout delay</string>
+    <string name="pref_endure_playout_delay_dlg">e.g., 100 ms</string>
+    <string name="pref_endure_playout_delay_default" translatable="false">0</string>
+
 </resources>

@@ -33,6 +33,7 @@ public class SharedMemoryManager {
     public void setupSharedMemory() {
         try {
             RandomAccessFile sharedFile = new RandomAccessFile(filePath, "rw");
+            sharedFile.setLength(0);
             fileChannel = sharedFile.getChannel();
             mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, 1024); // Size of 1KB for example
             Log.i(TAG, "mmap in " + filePath);

@@ -71,6 +71,18 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
 
   private SharedMemoryManager shared;
 
+  private String keyprefIsEndure;
+
+  private String keyprefEndureMode;
+
+  private String keyprefEndureDeadline;
+
+  private String keyprefIsFixedBitrate;
+
+  private String keyprefEndureFixedBitrate;
+
+  private String keyprefEndurePlayoutDelay;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -119,15 +131,18 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
     shared = new SharedMemoryManager(this);
     shared.setupSharedMemory();
 
-    Map<String, Object> data = new HashMap<>();
-    data.put("is_endure", true);
+    keyprefIsEndure = getString(R.string.pref_is_endure_key);
+    keyprefEndureMode = getString(R.string.pref_endure_mode_key);
+    keyprefEndureDeadline = getString(R.string.pref_endure_deadline_key);
+    keyprefIsFixedBitrate = getString(R.string.pref_is_fixed_bitrate_key);
+    keyprefEndureFixedBitrate = getString(R.string.pref_endure_fixed_bitrate_key);
+    keyprefEndurePlayoutDelay = getString(R.string.pref_endure_playout_delay_key);
 
-    // Assuming you want to write to the same file used in setupSharedMemory
-    shared.writeToJsonFile(shared.getFilePath(), data);
+    Log.i("ENDURE setting", "is_endure: " + keyprefIsEndure + " endure mode: " + keyprefEndureMode + " endure deadline: " + keyprefEndureDeadline);
 
     // Read the content back
     String jsonContent = shared.readFromJsonFile();
-    Log.i("HiHiHi", "Read from file: " + jsonContent);
+    Log.i("ENDURE setting (init)", "Read from file: " + jsonContent);
 
     // Display the fragment as the main content.
     settingsFragment = new SettingsFragment();
@@ -216,8 +231,8 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
       disableBuiltInNSPreference.setEnabled(false);
     }
 
-
-    Log.i("HiHi", "SettingsActivity");
+    // ENDURE setting
+    updateENDURE(sharedPreferences);
   }
 
   @Override
@@ -282,6 +297,58 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
     if (key.equals(keyprefEnableDataChannel)) {
       setDataChannelEnable(sharedPreferences);
     }
+    if (key.equals(keyprefIsEndure) || key.equals(keyprefEndureMode) || key.equals(keyprefEndureDeadline) ||
+              key.equals(keyprefIsFixedBitrate) ||
+              key.equals(keyprefEndureFixedBitrate) ||
+              key.equals(keyprefEndurePlayoutDelay)) {// ENDURE setting
+      updateENDURE(sharedPreferences);
+    }
+  }
+
+  public void updateENDURE (SharedPreferences sharedPreferences) {
+      boolean is_endure = false;
+      String endure_mode = "";
+      String endure_deadline = "";
+      boolean is_fixed_bitrate = false;
+      String endure_fixed_bitrate = "";
+      String endure_playout_delay = "";
+
+      is_endure = sharedPreferences.getBoolean(keyprefIsEndure, false);
+      endure_mode = sharedPreferences.getString(keyprefEndureMode, "");
+      endure_deadline = sharedPreferences.getString(keyprefEndureDeadline, "");
+      is_fixed_bitrate = sharedPreferences.getBoolean(keyprefIsFixedBitrate, false);
+      endure_fixed_bitrate = sharedPreferences.getString(keyprefEndureFixedBitrate, "");
+      endure_playout_delay = sharedPreferences.getString(keyprefEndurePlayoutDelay, "");
+
+      Log.i("ENDURE setting", "is_endure: " + keyprefIsEndure + " endure mode: " + keyprefEndureMode + " endure deadline: " + keyprefEndureDeadline);
+
+      int is_endure_int = is_endure ? 1 : 0;
+      int mode_int = Integer.valueOf(endure_mode);
+      int deadline_int = Integer.valueOf(endure_deadline);
+      double endure_fixed_bitrate_double = Double.valueOf(endure_fixed_bitrate);
+      if (endure_fixed_bitrate_double <= 0.5) {
+        endure_fixed_bitrate_double = 0.5;
+      }
+      int endure_fixed_bitrate_int = (int)(endure_fixed_bitrate_double*1000000);
+      int endure_playout_delay_int = Integer.valueOf(endure_playout_delay);
+
+      Map<String, Object> data = new HashMap<>();
+      data.put("is_endure", is_endure_int);
+      data.put("frame_pacing_mode", mode_int);
+      data.put("deadline", deadline_int);
+      if (is_fixed_bitrate) {
+        data.put("max_bitrate", endure_fixed_bitrate_int);
+        data.put("min_bitrate", endure_fixed_bitrate_int);
+      }
+      data.put("playout_delay", endure_playout_delay_int);
+
+      // Assuming you want to write to the same file used in setupSharedMemory
+      shared.setupSharedMemory();
+      shared.writeToJsonFile(shared.getFilePath(), data);
+
+      // Read the content back
+      String jsonContent = shared.readFromJsonFile();
+      Log.i("ENDURE setting", "Read from file: " + jsonContent);
   }
 
   private void updateSummary(SharedPreferences sharedPreferences, String key) {
@@ -342,4 +409,5 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
     settingsFragment.findPreference(keyprefNegotiated).setEnabled(enabled);
     settingsFragment.findPreference(keyprefDataId).setEnabled(enabled);
   }
+
 }

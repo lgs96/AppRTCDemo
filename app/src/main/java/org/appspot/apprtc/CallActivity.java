@@ -715,16 +715,17 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   private @Nullable VideoCapturer createVideoCapturer() {
     final VideoCapturer videoCapturer;
 
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      if (!Environment.isExternalStorageManager()) {
+        Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+        Uri uri = Uri.fromParts("package", getPackageName(), null);
+        intent.setData(uri);
+        startActivity(intent);
+      }
+    }
+
     String videoFileAsCamera = "/sdcard/CCVideo/1080_test.y4m";
     if (predefinedVideoEnabled && videoFileAsCamera != null) {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        if (!Environment.isExternalStorageManager()) {
-          Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-          Uri uri = Uri.fromParts("package", getPackageName(), null);
-          intent.setData(uri);
-          startActivity(intent);
-        }
-      }
       try {
         videoCapturer = new FileVideoCapturer(videoFileAsCamera);
       } catch (IOException e) {

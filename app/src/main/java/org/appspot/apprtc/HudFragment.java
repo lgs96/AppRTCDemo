@@ -11,6 +11,9 @@
 package org.appspot.apprtc;
 
 import android.app.Fragment;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 
@@ -23,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import org.appspot.apprtc.profiler.ProfilingService;
 import org.webrtc.StatsReport;
 
 import java.io.File;
@@ -37,7 +41,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import com.opencsv.CSVWriter;
-
 
 /**
  * Fragment for HUD statistics display.
@@ -76,6 +79,20 @@ public class HudFragment extends Fragment {
     add("bytesReceived");
   }};
 
+  List<String> tempToExtractSent = new ArrayList<String>() {{
+    add("BatteryCapacity");
+    add("BatteryCurrentAvg");
+    add("BatteryPowerAvg");
+    add("CPULittle");
+    add("CPUBig1");
+    add("CPUBig2");
+    add("SkinTemp");
+    add("CPUTemp");
+    add("SkinState");
+    add("LTEinfo");
+    add("NRinfo");
+  }};
+
   List<String> combinedSentList;
   List<String> combinedRecvList;
 
@@ -95,6 +112,23 @@ public class HudFragment extends Fragment {
 
   String[] csv_dataSent;
   String[] csv_dataRecv;
+
+  private BroadcastReceiver updateReceiver;
+
+  String LTEinfo = null;
+  String NRinfo = null;
+  String skinTemp = null;
+  String cpuTemp = null;
+  String cpuLittle = null;
+  String cpuBig1 = null;
+  String cpuBig2 = null;
+  String skinState = null;
+  String stats = null;
+  String battery_capacity = null;
+  String battery_current_avg = null;
+  String battery_power_avg = null;
+
+  private float [] battery_info = new float [tempToExtractSent.size()];
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -117,6 +151,7 @@ public class HudFragment extends Fragment {
           combinedSentList.add("Time");
           combinedSentList.addAll(computeToExtractSent);
           combinedSentList.addAll(networkToExtractSent);
+          combinedSentList.addAll(tempToExtractSent);
           csv_dataSent = combinedSentList.toArray(new String[0]);
           writerSent.writeNext(csv_dataSent);
           writerSent.close(); // close file
@@ -142,11 +177,50 @@ public class HudFragment extends Fragment {
           String filePathSent = csvfileSent.getAbsolutePath();
           Log.i("CSV File Path", filePathSent);
 
+          triggerServiceOperation ();
+
+          for (int i = 0; i < battery_info.length; i++) {
+            battery_info[i] = 0; // Initialize each element to 0, for example
+          }
+
+          updateReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+              if ("org.appspot.apprtc.UPDATE_HUD_FRAGMENT".equals(intent.getAction())) {
+                battery_info [0] = intent.getFloatExtra("BatteryCapacity", 0);
+                battery_info [1] = intent.getFloatExtra("BatteryCurrent", 0);
+                battery_info [2] = intent.getIntExtra("BatteryPower", 0);
+
+                battery_info [3] = intent.getIntExtra("CpuLittle", 0);
+                battery_info [4] = intent.getIntExtra("CpuBig1", 0);
+                battery_info [5] = intent.getIntExtra("CpuBig2", 0);
+
+                battery_info [6] = intent.getFloatExtra("SkinTemp", 0);
+                battery_info [7] = intent.getFloatExtra("CpuTemp", 0);
+                battery_info [8] = intent.getFloatExtra("SkinState", 0);
+
+                battery_info [9] = intent.getIntExtra("LteInfo", 0);
+                battery_info [10] = intent.getIntExtra("NrInfo", 0);
+
+                stats = intent.getStringExtra("Stats");
+
+                Log.i("Thermal", "Broadcast updated ");
+              }
+            }
+          };
+
         } catch (IOException e) {
           e.printStackTrace();
         }
       }
     }).start();
+  }
+
+  public void triggerServiceOperation() {
+    Intent serviceIntent = new Intent(getActivity(), ProfilingService.class);
+    serviceIntent.putExtra("TASK_ACTION", "Do_Something");
+    getActivity().startService(serviceIntent);
+    Log.i("Thermal", "Broadcast started ");
   }
 
   private TextView encoderStatView;
@@ -206,6 +280,9 @@ public class HudFragment extends Fragment {
   @Override
   public void onStop() {
     isRunning = false;
+    Intent serviceIntent = new Intent(getActivity(), ProfilingService.class);
+    getActivity().stopService(serviceIntent);
+    requireContext().unregisterReceiver(updateReceiver);
     super.onStop();
   }
 
@@ -257,6 +334,7 @@ public class HudFragment extends Fragment {
             if (report.id.contains("send")) {
               String trackId = reportMap.get("googTrackId");
               if (trackId != null && trackId.contains(PeerConnectionClient.VIDEO_TRACK_ID)) {
+                /*
                 valuesSent[0] = String.format("%.3f", elapsedSeconds);
                 for (int i = 1; i < combinedSentList.size(); i++) {
                   if (reportMap.containsKey(combinedSentList.get(i))) {
@@ -264,20 +342,11 @@ public class HudFragment extends Fragment {
                     valuesSent[i] = reportMap.get(combinedSentList.get(i));
                   }
                 }
-                try {
-                  writerSent = new CSVWriter(new FileWriter(csvfileSent, true)); // open file
-                  writerSent.writeNext(valuesSent);
-                  writerSent.flush();
-                  writerSent.close(); // close file
-
-                  Log.i("CSV values Sent", Arrays.toString(valuesSent));
-                } catch (IOException e) {
-                  e.printStackTrace();
-                  Log.e("CSV_WRITE_ERROR", "Error writing to CSV file", e);
-                }
+                 */
               }
             } else if (report.id.contains("recv")) {
               String frameWidth = reportMap.get("googFrameWidthReceived");
+              /*
               if (frameWidth != null) {
                 valuesRecv[0] = String.format("%.3f", elapsedSeconds);
                 for (int i = 1; i < combinedRecvList.size(); i++) {
@@ -298,6 +367,7 @@ public class HudFragment extends Fragment {
                   Log.e("CSV_WRITE_ERROR", "Error writing to CSV file", e);
                 }
               }
+               */
             }
           }
           else if (report.id.equals("bweforvideo")) {
@@ -307,6 +377,11 @@ public class HudFragment extends Fragment {
                 valuesSent[i] = reportMap.get(combinedSentList.get(i));
               }
             }
+            // Temp info
+            for (int i = computeToExtractSent.size() + networkToExtractSent.size(); i < combinedSentList.size(); i++) {
+              //valuesSent[i] = String.valueOf(battery_info[i - computeToExtractSent.size()]);
+            }
+
             try {
               writerSent = new CSVWriter(new FileWriter(csvfileSent, true)); // open file
               writerSent.writeNext(valuesSent);
@@ -411,4 +486,5 @@ public class HudFragment extends Fragment {
     }
     encoderStatView.setText(encoderStat.toString());
   }
+
 }

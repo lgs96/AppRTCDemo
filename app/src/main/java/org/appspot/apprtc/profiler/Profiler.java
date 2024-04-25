@@ -126,7 +126,7 @@ public class Profiler {
         if (model_name.contains("Pixel 7 Pro")) {
             NET_INTERFACE = "rmnet1";
             TZONE_MODEM_SKIN = "/sys/class/thermal/thermal_zone12/temp"; // cellular emergency is triggered by neutral_therm (thermal_zone6)
-            TZONE_CPU = "/sys/class/thermal/thermal_zone3/temp";
+            TZONE_CPU = "/sys/class/thermal/thermal_zone0/temp";
             CLOCK_LITTLE = "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq";
             CLOCK_BIG1 = "/sys/devices/system/cpu/cpufreq/policy4/cpuinfo_cur_freq";
             CLOCK_BIG2 = "/sys/devices/system/cpu/cpufreq/policy6/cpuinfo_cur_freq";

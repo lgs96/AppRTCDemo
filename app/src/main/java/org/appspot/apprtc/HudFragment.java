@@ -14,8 +14,11 @@ import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.os.Environment;
 import android.util.Log;
@@ -41,6 +44,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import com.opencsv.CSVWriter;
+
 
 /**
  * Fragment for HUD statistics display.
@@ -83,6 +87,7 @@ public class HudFragment extends Fragment {
     add("BatteryCapacity");
     add("BatteryCurrentAvg");
     add("BatteryPowerAvg");
+    add("BatteryPowerIns");
     add("CPULittle");
     add("CPUBig1");
     add("CPUBig2");
@@ -133,6 +138,7 @@ public class HudFragment extends Fragment {
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
     new Thread(new Runnable() {
       @Override
       public void run() {
@@ -189,18 +195,19 @@ public class HudFragment extends Fragment {
               if ("org.appspot.apprtc.UPDATE_HUD_FRAGMENT".equals(intent.getAction())) {
                 battery_info [0] = intent.getFloatExtra("BatteryCapacity", 0);
                 battery_info [1] = intent.getFloatExtra("BatteryCurrent", 0);
-                battery_info [2] = intent.getIntExtra("BatteryPower", 0);
+                battery_info [2] = intent.getIntExtra("BatteryPowerAvg", 0);
+                battery_info [3] = intent.getIntExtra("BatteryPowerIns", 0);
 
-                battery_info [3] = intent.getIntExtra("CpuLittle", 0);
-                battery_info [4] = intent.getIntExtra("CpuBig1", 0);
-                battery_info [5] = intent.getIntExtra("CpuBig2", 0);
+                battery_info [4] = intent.getIntExtra("CpuLittle", 0);
+                battery_info [5] = intent.getIntExtra("CpuBig1", 0);
+                battery_info [6] = intent.getIntExtra("CpuBig2", 0);
 
-                battery_info [6] = intent.getFloatExtra("SkinTemp", 0);
-                battery_info [7] = intent.getFloatExtra("CpuTemp", 0);
-                battery_info [8] = intent.getFloatExtra("SkinState", 0);
+                battery_info [7] = intent.getFloatExtra("SkinTemp", 0);
+                battery_info [8] = intent.getFloatExtra("CpuTemp", 0);
+                battery_info [9] = intent.getFloatExtra("SkinState", 0);
 
-                battery_info [9] = intent.getIntExtra("LteInfo", 0);
-                battery_info [10] = intent.getIntExtra("NrInfo", 0);
+                battery_info [10] = intent.getIntExtra("LteInfo", 0);
+                battery_info [11] = intent.getIntExtra("NrInfo", 0);
 
                 stats = intent.getStringExtra("Stats");
 
@@ -208,6 +215,13 @@ public class HudFragment extends Fragment {
               }
             }
           };
+
+
+          IntentFilter filter = new IntentFilter("org.appspot.apprtc.UPDATE_HUD_FRAGMENT");
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            LocalBroadcastManager.getInstance(getContext()).registerReceiver(updateReceiver,
+                    filter);
+          }
 
         } catch (IOException e) {
           e.printStackTrace();
@@ -282,7 +296,11 @@ public class HudFragment extends Fragment {
     isRunning = false;
     Intent serviceIntent = new Intent(getActivity(), ProfilingService.class);
     getActivity().stopService(serviceIntent);
-    requireContext().unregisterReceiver(updateReceiver);
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(updateReceiver);
+    }
+
     super.onStop();
   }
 
@@ -334,7 +352,6 @@ public class HudFragment extends Fragment {
             if (report.id.contains("send")) {
               String trackId = reportMap.get("googTrackId");
               if (trackId != null && trackId.contains(PeerConnectionClient.VIDEO_TRACK_ID)) {
-                /*
                 valuesSent[0] = String.format("%.3f", elapsedSeconds);
                 for (int i = 1; i < combinedSentList.size(); i++) {
                   if (reportMap.containsKey(combinedSentList.get(i))) {
@@ -342,7 +359,6 @@ public class HudFragment extends Fragment {
                     valuesSent[i] = reportMap.get(combinedSentList.get(i));
                   }
                 }
-                 */
               }
             } else if (report.id.contains("recv")) {
               String frameWidth = reportMap.get("googFrameWidthReceived");
@@ -378,8 +394,15 @@ public class HudFragment extends Fragment {
               }
             }
             // Temp info
-            for (int i = computeToExtractSent.size() + networkToExtractSent.size(); i < combinedSentList.size(); i++) {
-              //valuesSent[i] = String.valueOf(battery_info[i - computeToExtractSent.size()]);
+            try {
+              int previous_size = computeToExtractSent.size() + networkToExtractSent.size();
+              for (int i = previous_size + 1; i < combinedSentList.size(); i++) {
+                //Log.e("Thermal", "Error in writing the temp info" + String.valueOf(i - 1 - previous_size));
+                valuesSent[i] = String.valueOf(battery_info[i - 1 - previous_size]);
+              }
+            }
+            catch (Exception e){
+              Log.e("Thermal", "Error in writing the temp info");
             }
 
             try {

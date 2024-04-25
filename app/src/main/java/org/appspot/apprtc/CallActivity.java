@@ -14,7 +14,9 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
+import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -48,6 +50,7 @@ import org.appspot.apprtc.AppRTCClient.RoomConnectionParameters;
 import org.appspot.apprtc.AppRTCClient.SignalingParameters;
 import org.appspot.apprtc.PeerConnectionClient.DataChannelParameters;
 import org.appspot.apprtc.PeerConnectionClient.PeerConnectionParameters;
+import org.appspot.apprtc.profiler.MyDeviceAdminReceiver;
 import org.appspot.apprtc.profiler.ProfilingService;
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
@@ -141,6 +144,9 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
 
   // Goodsol
   private Intent record_intent;
+
+  private DevicePolicyManager devicePolicyManager;
+  private ComponentName adminComponent;
 
   private static class ProxyVideoSink implements VideoSink {
     private VideoSink target;
@@ -402,6 +408,19 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     } else {
       startCall();
     }
+
+    /*
+    devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+    adminComponent = new ComponentName(this, MyDeviceAdminReceiver.class);
+
+    if (!devicePolicyManager.isAdminActive(adminComponent)) {
+      Intent policyIntent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+      policyIntent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent);
+      policyIntent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+              "Additional text explaining why this needs to be added.");
+      startActivityForResult(policyIntent, 1);
+    }
+     */
   }
 
   @TargetApi(17)

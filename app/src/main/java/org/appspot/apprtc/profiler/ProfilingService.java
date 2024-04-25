@@ -88,11 +88,16 @@ public class ProfilingService extends Service {
 
     float skinTemp;
     float cpuTemp;
+    float throttlingTemp;
     float skinState;
+
+    float thermalHeadroom;
 
     float batteryPct = 0;
     float batteryVoltage = 0;
     float batteryCurrent = 0;
+    int batteryPowerAvg = 0;
+    int batteryPowerIns = 0;
     int batteryPower = 0;
 
     // LTE, NR info
@@ -122,7 +127,6 @@ public class ProfilingService extends Service {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -149,9 +153,11 @@ public class ProfilingService extends Service {
         intent = new Intent("org.appspot.apprtc.UPDATE_HUD_FRAGMENT");
         batteryManager = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            hardwarePropertiesManager = (HardwarePropertiesManager) getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
+        }
 
-        hardwarePropertiesManager = (HardwarePropertiesManager) getSystemService(Context.HARDWARE_PROPERTIES_SERVICE);
-        myFile = createCsvFile();
+        //myFile = createCsvFile();
         referenceTime = System.currentTimeMillis();
         runnableCode = new Runnable() {
             @Override
@@ -159,15 +165,21 @@ public class ProfilingService extends Service {
                 GetBatteryInfo();
                 GetCpuInfo();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    readLteInfo();
-                    readNrInfo();
+                    try {
+                        readLteInfo();
+                        readNrInfo();
+                    }
+                    catch (Exception e) {
+                        Log.i("Thermal", "no LTE or Nr signal");
+                    }
                 }
 
                 if (catCounter % 25 == 0) {
                     GetTempInfo();
 
-                    String notificationContent = "Power: " + batteryPower + "mW, CPU temp: " + cpuTemp +" C, Throttle: " + skinState;
-                    updateNotification(notificationContent);
+                    String notificationContent = "Power: " + batteryPowerAvg + "mW, CPU temp: " + (int)cpuTemp +" C, Skin temp:"+ (int)skinTemp +" Throttle: " + (int)skinState +
+                            "\nBig1: " + cpuBig1 + " Big2: " + cpuBig2 + " Little: " + cpuLittle;
+                    //updateNotification(notificationContent);
 
                     catCounter = 1;
                 } else {
@@ -176,10 +188,8 @@ public class ProfilingService extends Service {
                 //Logging(myFile);
                 // Schedule this runnable again after 1 second
                 handler.postDelayed(this, 200);
-
             }
         };
-
         // Start the initial runnable task by posting through the handler
         handler.post(runnableCode);
     }
@@ -193,19 +203,29 @@ public class ProfilingService extends Service {
         batteryVoltage = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1) : -1;
         batteryPct = level * 100 / (float) scale;
 
-        // Get battery current (in microamperes)
-        batteryCurrent = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
+        float temp_battery_avg = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE);
+        float temp_battery_ins = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+        if (profiler.model_name.contains("SM-S901N")){
+            temp_battery_avg *= 1000;
+            temp_battery_ins *= 1000;
+        }
 
-        batteryPower = (int) (batteryCurrent * batteryVoltage / 1000);
+        // Get battery current (in microamperes)
+        batteryCurrent = temp_battery_avg / 1000;
+        temp_battery_ins = temp_battery_ins / 1000;
+
+        batteryPowerAvg = (int) (batteryCurrent * batteryVoltage / 1000);
+        batteryPowerIns = (int) (temp_battery_ins * batteryVoltage / 1000);
 
         // Broadcast battery information
         intent.putExtra("BatteryCapacity", batteryPct);
         intent.putExtra("BatteryCurrent", batteryCurrent);
-        intent.putExtra("BatteryPower", batteryPower);
+        intent.putExtra("BatteryPowerAvg", batteryPowerAvg);
+        intent.putExtra("BatteryPowerIns", batteryPowerIns);
         LocalBroadcastManager.getInstance(ProfilingService.this).sendBroadcast(intent);
 
         // Log the battery status
-        Log.i("BatteryMonitorService", "Battery Level: " + batteryPct + "%, Voltage: " + batteryVoltage + "mV, Current: " + batteryCurrent + "mA, Power: " + batteryPower + "mW");
+        Log.i("BatteryMonitorService", "Battery Level: " + batteryPct + "%, Voltage: " + batteryVoltage + "mV, Current: " + batteryCurrent + "mA, Power: " + batteryPowerIns + "mW");
     }
 
     public void GetCpuInfo() {
@@ -225,41 +245,66 @@ public class ProfilingService extends Service {
 
     public void GetTempInfo() {
         try {
-            float[] cpuTemps = hardwarePropertiesManager.getDeviceTemperatures(
-                    HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
-                    HardwarePropertiesManager.TEMPERATURE_CURRENT);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                float[] cpuTemps = hardwarePropertiesManager.getDeviceTemperatures(
+                        HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU,
+                        HardwarePropertiesManager.TEMPERATURE_CURRENT);
 
-            float[] skinTemps = hardwarePropertiesManager.getDeviceTemperatures(
-                    HardwarePropertiesManager.DEVICE_TEMPERATURE_SKIN,
-                    HardwarePropertiesManager.TEMPERATURE_CURRENT);
+                float[] skinTemps = hardwarePropertiesManager.getDeviceTemperatures(
+                        HardwarePropertiesManager.DEVICE_TEMPERATURE_SKIN,
+                        HardwarePropertiesManager.TEMPERATURE_CURRENT);
 
-            skinTemp = printTemperatures("skin", skinTemps);
-            cpuTemp = printTemperatures("cpu", cpuTemps);
-            // skinState = profiler.getSkinState();
 
-            intent.putExtra("SkinTemp", skinTemp);
-            intent.putExtra("CpuTemp", cpuTemp);
-            intent.putExtra("SkinState", skinState);
-            LocalBroadcastManager.getInstance(ProfilingService.this).sendBroadcast(intent);
+                float[] throttlingTemps = hardwarePropertiesManager.getDeviceTemperatures(
+                        HardwarePropertiesManager.DEVICE_TEMPERATURE_SKIN,
+                        HardwarePropertiesManager.TEMPERATURE_SHUTDOWN);
 
-            Log.i("TempMonitorService", "Skin: " + skinTemp + " Cpu: " + cpuTemp + " SkinState: " + skinState);
+                Log.i("TempMonitorService", "Got cpu/skin temp ");
+
+                skinTemp = printTemperatures("skin", skinTemps);
+                cpuTemp = printTemperatures("cpu", cpuTemps);
+                throttlingTemp = printTemperatures("throttling", throttlingTemps);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    skinState = powerManager.getCurrentThermalStatus();
+                    float tempVal = powerManager.getThermalHeadroom(1);
+                    if (!Float.isNaN(tempVal)) {
+                        thermalHeadroom = tempVal;
+                    }
+                    Log.i("TempMonitorService", "Headroom " + skinState + " " + thermalHeadroom);
+                }
+            }
         }
         catch (Exception e) {
-            Log.i("TempMonitorService", "No permission");
+            Log.i("TempMonitorService", "No permission.. read directly");
+            try {
+                cpuTemp = profiler.getCPUTemp();
+                skinTemp = profiler.getSkinTemp();
+                skinState = profiler.getSkinState();
+            }
+            catch (Exception ee){
+                Log.e("TempMonitorService", "No permission.. do nothing");
+            }
         }
+        intent.putExtra("SkinTemp", skinTemp);
+        intent.putExtra("CpuTemp", cpuTemp);
+        intent.putExtra("SkinState", skinState);
+        LocalBroadcastManager.getInstance(ProfilingService.this).sendBroadcast(intent);
+
+        Log.i("TempMonitorService", "Skin: " + skinTemp + " Cpu: " + cpuTemp + " SkinState: " + skinState);
     }
 
     // Function to print temperature arrays
     private float printTemperatures(String label, float[] temps) {
+        float myTemp = 0;
         if (temps != null && temps.length > 0) {
             for (float temp : temps) {
                 Log.i("TemperatureInfo", label + " " + temp);
-                return temp;
+                myTemp = temp;
             }
         } else {
             Log.i("TemperatureInfo", label + ": No data");
         }
-        return 0;
+        return myTemp;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.R)
@@ -363,22 +408,23 @@ public class ProfilingService extends Service {
 
     @Override
     public void onDestroy() {
+        /*
         File csvFile = myFile;
         Map<String, Double> averages = calculateAverages(csvFile);
 
         // Log or use the averages as needed
+
         String stats = "Avg Battery Power: " + averages.get("averageBatteryPower") +
                 ", Avg CPU Temp: " + averages.get("averageTempCpu") +
                 ", Avg Thermal Throttle: " + averages.get("averageThermalThrottle");
 
         intent.putExtra("Stats", stats);
         LocalBroadcastManager.getInstance(ProfilingService.this).sendBroadcast(intent);
+         */
 
         super.onDestroy();
         stopForeground(true);
         handler.removeCallbacks(runnableCode);
-
-        Log.i("tftf", "stop profiling service " + stats);
 
     }
 

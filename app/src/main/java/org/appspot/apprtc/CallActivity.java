@@ -727,9 +727,10 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     String videoFileAsCamera = "/sdcard/CCVideo/1080_test.y4m";
     if (predefinedVideoEnabled && videoFileAsCamera != null) {
       try {
+        Log.e("ENDURE", "Succeed predefined");
         videoCapturer = new FileVideoCapturer(videoFileAsCamera);
       } catch (IOException e) {
-        Log.e("ENDURE", "Failed " + e);
+        Log.e("ENDURE", "Failed predefined " + e);
         reportError("Failed to open predefined video file for emulated camera");
         return null;
       }

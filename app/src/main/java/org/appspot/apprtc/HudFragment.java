@@ -11,6 +11,10 @@
 package org.appspot.apprtc;
 
 import android.app.Fragment;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 
@@ -22,6 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.webrtc.StatsReport;
 
@@ -264,17 +269,6 @@ public class HudFragment extends Fragment {
                     valuesSent[i] = reportMap.get(combinedSentList.get(i));
                   }
                 }
-                try {
-                  writerSent = new CSVWriter(new FileWriter(csvfileSent, true)); // open file
-                  writerSent.writeNext(valuesSent);
-                  writerSent.flush();
-                  writerSent.close(); // close file
-
-                  Log.i("CSV values Sent", Arrays.toString(valuesSent));
-                } catch (IOException e) {
-                  e.printStackTrace();
-                  Log.e("CSV_WRITE_ERROR", "Error writing to CSV file", e);
-                }
               }
             } else if (report.id.contains("recv")) {
               String frameWidth = reportMap.get("googFrameWidthReceived");
@@ -314,6 +308,15 @@ public class HudFragment extends Fragment {
               writerSent.close(); // close file
 
               Log.i("CSV values Sent", Arrays.toString(valuesSent));
+              // Creating the intent to send data to the receiver app
+              if (getActivity() != null) {
+                Intent intent = new Intent("com.example.t5gservice.INTENT_ACTION");
+                intent.setComponent(new ComponentName("com.example.t5gservice", "com.example.t5gservice.MyReceiver"));
+                intent.putExtra("valuesKey", valuesSent);
+                getActivity().sendBroadcast(intent);
+              } else {
+                Log.e("BroadcastError", "Activity context is not available");
+              }
             } catch (IOException e) {
               e.printStackTrace();
               Log.e("CSV_WRITE_ERROR", "Error writing to CSV file", e);

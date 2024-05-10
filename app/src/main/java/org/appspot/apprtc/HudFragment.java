@@ -56,6 +56,8 @@ public class HudFragment extends Fragment {
     add("googFrameWidthInput");
     add("googFrameHeightSent");
     add("googFrameWidthSent");
+    add("googFrameRateInput");
+    add("googFrameRateSent");
     add("googRtt");
   }};
 

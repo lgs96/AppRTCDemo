@@ -254,9 +254,29 @@
     <string name="pref_endure_fixed_bitrate_dlg">e.g., 10 Mbps</string>
     <string name="pref_endure_fixed_bitrate_default" translatable="false">0</string>
 
+    <string name="pref_is_fixed_pacing_key">is_fixed_pacing_preference</string>
+    <string name="pref_is_fixed_pacing_title">Is fixed pacing?</string>
+    <string name="pref_is_fixed_pacing_dlg">0: Default, 1: Fixed pacing.</string>
+    <string name="pref_is_fixed_pacing_default" translatable="false">false</string>
+
+    <string name="pref_endure_fixed_pacing_key">endure_fixed_pacing_preference</string>
+    <string name="pref_endure_fixed_pacing_title">ENDURE fixed pacing (Mbps)</string>
+    <string name="pref_endure_fixed_pacing_dlg">e.g., 10 Mbps</string>
+    <string name="pref_endure_fixed_pacing_default" translatable="false">0</string>
+
     <string name="pref_endure_playout_delay_key">endure_playout_delay_preference</string>
     <string name="pref_endure_playout_delay_title">ENDURE playout delay</string>
     <string name="pref_endure_playout_delay_dlg">e.g., 100 ms</string>
     <string name="pref_endure_playout_delay_default" translatable="false">0</string>
+
+    <string name="pref_endure_only_encode_key">endure_only_encode_preference</string>
+    <string name="pref_endure_only_encode_title">Do you want encoding only?</string>
+    <string name="pref_endure_only_encode_dlg">0: Default, 1: Only Encode.</string>
+    <string name="pref_endure_only_encode_default" translatable="false">false</string>
+
+    <string name="pref_is_log_internal_key">is_log_internal_preference</string>
+    <string name="pref_is_log_internal_title">Do you want internal log?</string>
+    <string name="pref_is_log_internal_dlg">0: Not Logging, 1: Logging.</string>
+    <string name="pref_is_log_internal_default" translatable="false">false</string>
 
 </resources>

@@ -288,12 +288,40 @@
             android:defaultValue="@string/pref_endure_fixed_bitrate_default"
             android:dialogTitle="@string/pref_endure_fixed_bitrate_dlg"/>
 
+        <CheckBoxPreference
+            android:key="@string/pref_is_fixed_pacing_key"
+            android:title="@string/pref_is_fixed_pacing_title"
+            android:defaultValue="@string/pref_is_fixed_pacing_default"
+            android:dialogTitle="@string/pref_is_fixed_pacing_dlg"/>
+
+        <EditTextPreference
+            android:key="@string/pref_endure_fixed_pacing_key"
+            android:title="@string/pref_endure_fixed_pacing_title"
+            android:inputType="text"
+            android:defaultValue="@string/pref_endure_fixed_pacing_default"
+            android:dialogTitle="@string/pref_endure_fixed_pacing_dlg"/>
+
+
         <EditTextPreference
             android:key="@string/pref_endure_playout_delay_key"
             android:title="@string/pref_endure_playout_delay_title"
             android:inputType="text"
             android:defaultValue="@string/pref_endure_playout_delay_default"
             android:dialogTitle="@string/pref_endure_playout_delay_dlg"/>
+
+
+        <CheckBoxPreference
+            android:key="@string/pref_endure_only_encode_key"
+            android:title="@string/pref_endure_only_encode_title"
+            android:defaultValue="@string/pref_endure_only_encode_default"
+            android:dialogTitle="@string/pref_endure_only_encode_dlg"/>
+
+
+        <CheckBoxPreference
+            android:key="@string/pref_is_log_internal_key"
+            android:title="@string/pref_is_log_internal_title"
+            android:defaultValue="@string/pref_is_log_internal_default"
+            android:dialogTitle="@string/pref_is_log_internal_dlg"/>
 
 
     </PreferenceCategory>

@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-  namespace = "org.appspot.apprtc"
+  namespace 'org.appspot.apprtc'
   compileSdkVersion 30
 
 //  sourceSets.main {
@@ -54,4 +54,5 @@ dependencies {
   implementation 'org.jetbrains:annotations:15.0'
   implementation 'com.google.code.gson:gson:2.8.8'
   implementation(name:'libwebrtc', ext:'aar')
+  implementation 'org.tensorflow:tensorflow-lite:2.3.0'
 }

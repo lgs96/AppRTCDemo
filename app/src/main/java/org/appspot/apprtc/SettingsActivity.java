@@ -80,8 +80,14 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
   private String keyprefIsFixedBitrate;
 
   private String keyprefEndureFixedBitrate;
+  private String keyprefIsFixedPacing;
+  private String keyprefEndureFixedPacing;
 
   private String keyprefEndurePlayoutDelay;
+
+  private String keyprefOnlyEncode;
+
+  private String keyprefIsLogInternal;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -136,7 +142,11 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
     keyprefEndureDeadline = getString(R.string.pref_endure_deadline_key);
     keyprefIsFixedBitrate = getString(R.string.pref_is_fixed_bitrate_key);
     keyprefEndureFixedBitrate = getString(R.string.pref_endure_fixed_bitrate_key);
+    keyprefIsFixedPacing = getString(R.string.pref_is_fixed_pacing_key);
+    keyprefEndureFixedPacing = getString(R.string.pref_endure_fixed_pacing_key);
     keyprefEndurePlayoutDelay = getString(R.string.pref_endure_playout_delay_key);
+    keyprefOnlyEncode = getString(R.string.pref_endure_only_encode_key);
+    keyprefIsLogInternal = getString(R.string.pref_is_log_internal_key);
 
     Log.i("ENDURE setting", "is_endure: " + keyprefIsEndure + " endure mode: " + keyprefEndureMode + " endure deadline: " + keyprefEndureDeadline);
 
@@ -300,7 +310,9 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
     if (key.equals(keyprefIsEndure) || key.equals(keyprefEndureMode) || key.equals(keyprefEndureDeadline) ||
               key.equals(keyprefIsFixedBitrate) ||
               key.equals(keyprefEndureFixedBitrate) ||
-              key.equals(keyprefEndurePlayoutDelay)) {// ENDURE setting
+              key.equals(keyprefEndureFixedPacing) ||
+              key.equals(keyprefEndurePlayoutDelay) ||
+              key.equals(keyprefOnlyEncode)) {// ENDURE setting
       updateENDURE(sharedPreferences);
     }
   }
@@ -311,26 +323,44 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
       String endure_deadline = "";
       boolean is_fixed_bitrate = false;
       String endure_fixed_bitrate = "";
+      boolean is_fixed_pacing = false;
+      String endure_fixed_pacing = "";
       String endure_playout_delay = "";
+      boolean only_encode = false;
+      boolean is_log_internal = false;
 
       is_endure = sharedPreferences.getBoolean(keyprefIsEndure, false);
       endure_mode = sharedPreferences.getString(keyprefEndureMode, "");
       endure_deadline = sharedPreferences.getString(keyprefEndureDeadline, "");
       is_fixed_bitrate = sharedPreferences.getBoolean(keyprefIsFixedBitrate, false);
       endure_fixed_bitrate = sharedPreferences.getString(keyprefEndureFixedBitrate, "");
+      is_fixed_pacing = sharedPreferences.getBoolean(keyprefIsFixedPacing, false);
+      endure_fixed_pacing = sharedPreferences.getString(keyprefEndureFixedPacing, "");
       endure_playout_delay = sharedPreferences.getString(keyprefEndurePlayoutDelay, "");
+      only_encode = sharedPreferences.getBoolean(keyprefOnlyEncode, false);
+      is_log_internal = sharedPreferences.getBoolean(keyprefIsLogInternal, false);
 
-      Log.i("ENDURE setting", "is_endure: " + keyprefIsEndure + " endure mode: " + keyprefEndureMode + " endure deadline: " + keyprefEndureDeadline);
+      Log.i("ENDURE setting", "is_endure: " + keyprefIsEndure + " endure mode: " + keyprefEndureMode + " endure deadline: " + keyprefEndureDeadline
+                                +"only_encode: " + keyprefOnlyEncode);
 
       int is_endure_int = is_endure ? 1 : 0;
       int mode_int = Integer.valueOf(endure_mode);
       int deadline_int = Integer.valueOf(endure_deadline);
       double endure_fixed_bitrate_double = Double.valueOf(endure_fixed_bitrate);
+
+      int is_fixed_pacing_int = is_fixed_pacing ? 1 : 0;
+      double endure_fixed_pacing_double = Double.valueOf(endure_fixed_pacing);
       if (endure_fixed_bitrate_double <= 0.5) {
         endure_fixed_bitrate_double = 0.5;
       }
+      if (endure_fixed_pacing_double <= 0.5) {
+        endure_fixed_pacing_double = 0.5;
+      }
       int endure_fixed_bitrate_int = (int)(endure_fixed_bitrate_double*1000000);
+      int endure_fixed_pacing_int = (int)(endure_fixed_pacing_double*1000000);
       int endure_playout_delay_int = Integer.valueOf(endure_playout_delay);
+      int only_encode_int = only_encode ? 1 : 0;
+      int is_log_internal_int = is_log_internal ? 1 : 0;
 
       Map<String, Object> data = new HashMap<>();
       data.put("is_endure", is_endure_int);
@@ -340,7 +370,15 @@ public class SettingsActivity extends Activity implements OnSharedPreferenceChan
         data.put("max_bitrate", endure_fixed_bitrate_int);
         data.put("min_bitrate", endure_fixed_bitrate_int);
       }
+      if (is_fixed_pacing) {
+        data.put("is_fixed_pacing", is_fixed_pacing_int);
+        data.put("fixed_pacing_rate", endure_fixed_pacing_int);
+      }
       data.put("playout_delay", endure_playout_delay_int);
+
+      // Temp
+      data.put("only_encode", only_encode_int);
+      data.put("is_log_internal", is_log_internal_int);
 
       // Assuming you want to write to the same file used in setupSharedMemory
       shared.setupSharedMemory();
